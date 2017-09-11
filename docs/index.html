@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <script>
+            var Module = {
+                onRuntimeInitialized: main,
+            };
+            function phone_home_callback(vec) {
+                let arr = rust_vec_to_js_array(vec);
+                console.log("Called home");
+                console.log("Got", arr, "back");
+                return js_array_to_rust_vec(["JS array", "returned", "from home"].concat(arr));
+            };
+            function query_local_storage_callback() {
+                return localStorage.getItem("mystorage");
+            }
+            function js_string_to_rust_utf8(string) {
+                var len = lengthBytesUTF8(string) + 1;
+                var buffer = Module._malloc(len);
+                Module.stringToUTF8(string, buffer, len);
+                return buffer;
+            };
+            function rust_utf8_to_js_string(string) {
+                return Module.UTF8ToString(string);
+            }
+            function rust_vec_to_js_array(vec_pointer) {
+                let arr = [];
+                for (i = 0; i < Module._get_vec_length(vec_pointer); i++) {
+                    arr.push(Module.ccall('get_vec_index', 'string', ['', 'number'], [vec_pointer, i]));
+                }
+                return arr;
+            };
+            function js_array_to_rust_vec(arr) {
+                let vec = Module.ccall('make_vec', '', [], []);
+                for (i = 0; i < arr.length; i++) {
+                    Module.ccall('vec_append', null, ['', 'string'], [vec, arr[i]]);
+                }
+                return vec;
+            };
+            function main() {
+                let print_something = Module.cwrap('print_something', null, []);
+                let print_argument = Module.cwrap('print_argument', null, ['string']);
+
+                print_something();
+
+                print_argument("Rust function called from JS with string arg: \u03A9\u26a1\u2211");
+                Module._print_argument(js_string_to_rust_utf8("Rust function called from JS with string arg: \u03A9\u26a1\u2211"));
+
+                let arr = ["JS array", "being passed", "to rust", "\u03A9\u26a1\u2211"];
+                let vec = js_array_to_rust_vec(arr);
+                Module.ccall('manipulate_and_print_array', null, [''], [vec]);
+                Module.ccall('drop_vec', null, [''], [vec]);
+
+                let arr2 = ["JS array", "passed and returned", "to and from rust", "\u03A9\u26a1\u2211"];
+                let vec2 = js_array_to_rust_vec(arr2);
+                let new_arr = rust_vec_to_js_array(Module.ccall('manipulate_and_return_array', '', [''], [vec2]));
+                console.log(new_arr);
+                Module.ccall('drop_vec', null, [''], [vec2]);
+
+                let arr3 = ["JS array", "passed and returned", "to and from rust", "\u03A9\u26a1\u2211"];
+                let vec3 = js_array_to_rust_vec(arr3);
+                let new_arr3 = rust_vec_to_js_array(Module.ccall('phone_home', '', [''], [vec3]));
+                console.log(new_arr3);
+                Module.ccall('drop_vec', null, [''], [vec3]);
+
+                let item = { key1: "value 1", key2: "value 2", a_list: ["item1: \u03A9\u26a1\u2211"] };
+                localStorage.setItem("mystorage", JSON.stringify(item));
+                let item_rx = JSON.parse(rust_utf8_to_js_string(Module.ccall('query_local_storage', '', [], [])));
+                console.log(item_rx);
+
+                let item_rx2 = JSON.parse(Module.ccall('change_key2', 'string', ['string'], [JSON.stringify(item)]));
+                console.log(item_rx2);
+            };
+        </script>
+        <script src="poc.js"></script>
+    </head>
+    <body></body>
+</html>

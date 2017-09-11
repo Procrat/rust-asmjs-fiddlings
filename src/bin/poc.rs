@@ -44,7 +44,7 @@ pub unsafe extern fn manipulate_and_return_array(array: *const Vec<String>) -> *
     Box::into_raw(Box::new(manipulated_array))
 }
 
-#[cfg_attr(target_arch="asmjs", link_args="--js-library site/lib.js")]
+#[cfg_attr(target_arch="asmjs", link_args="--js-library docs/lib.js")]
 extern {}
 
 #[allow(improper_ctypes)]
