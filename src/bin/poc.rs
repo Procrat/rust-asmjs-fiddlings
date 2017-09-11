@@ -1,6 +1,9 @@
 #![feature(link_args)]
 
 extern crate eva_poc;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 use std::ops::Index;
 use std::os::raw::c_char;
@@ -77,6 +80,23 @@ pub unsafe extern fn phone_home(array: *const Vec<String>) -> *mut Vec<String> {
 #[no_mangle]
 pub unsafe extern fn query_local_storage() -> *mut c_char {
     js_query_local_storage()
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Y {
+    key1: String,
+    key2: String,
+    a_list: Vec<String>,
+}
+
+#[no_mangle]
+pub unsafe extern fn change_key2(string: *mut c_char) -> *mut c_char {
+    let serialised = cstr_to_string(&string);
+    let mut parsed: Y = serde_json::from_str(&serialised).unwrap();
+    parsed.key2 = "changed value".to_owned();
+    parsed.a_list.push("item2: ⚡ ∑ ♥ ".to_owned());
+    let reserialised = serde_json::to_string(&parsed).unwrap();
+    string_to_cstr(&reserialised)
 }
 
 
