@@ -1,0 +1,9 @@
+[package]
+name = "eva-poc"
+version = "0.0.1"
+authors = ["Stijn Seghers <stijnseghers@gmail.com>"]
+
+[dependencies]
+
+[[bin]]
+name = "poc"
