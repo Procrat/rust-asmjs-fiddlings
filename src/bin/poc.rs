@@ -5,15 +5,15 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
+
+use std::ffi::{CStr, CString};
 use std::ops::Index;
 use std::os::raw::c_char;
-use std::ffi::CString;
-use std::ffi::CStr;
+
 use eva_poc::SomeTrait;
 
-fn main() {
-    println!("Main reached");
-}
+
+fn main() {}
 
 #[no_mangle]
 pub extern fn print_something() {
@@ -44,7 +44,7 @@ pub unsafe extern fn manipulate_and_return_array(array: *const Vec<String>) -> *
     Box::into_raw(Box::new(manipulated_array))
 }
 
-#[cfg_attr(target_arch="asmjs", link_args="--js-library docs/lib.js")]
+#[cfg_attr(target_arch="asmjs", link_args="--js-library docs/lib.js -s INVOKE_RUN=0")]
 extern {}
 
 #[allow(improper_ctypes)]
@@ -97,6 +97,11 @@ pub unsafe extern fn change_key2(string: *mut c_char) -> *mut c_char {
     parsed.a_list.push("item2: ⚡ ∑ ♥ ".to_owned());
     let reserialised = serde_json::to_string(&parsed).unwrap();
     string_to_cstr(&reserialised)
+}
+
+#[no_mangle]
+pub extern fn write_to_indexed_db() {
+    eva_poc::write_to_indexed_db()
 }
 
 

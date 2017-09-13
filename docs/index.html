@@ -2,7 +2,7 @@
     <head>
         <script>
             var Module = {
-                onRuntimeInitialized: main,
+                onRuntimeInitialized: main
             };
             function phone_home_callback(vec) {
                 let arr = rust_vec_to_js_array(vec);
@@ -69,6 +69,18 @@
 
                 let item_rx2 = JSON.parse(Module.ccall('change_key2', 'string', ['string'], [JSON.stringify(item)]));
                 console.log(item_rx2);
+
+                FS.mkdir("/indexed_db");
+                FS.mount(IDBFS, {}, "/indexed_db");
+                FS.syncfs(true, function(err) {
+                    console.log("Loaded!", err);
+
+                    Module._write_to_indexed_db();
+
+                    FS.syncfs(false, function(err) {
+                        console.log("Synced!", err);
+                    });
+                });
             };
         </script>
         <script src="poc.js"></script>
